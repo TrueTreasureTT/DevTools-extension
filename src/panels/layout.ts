@@ -1,0 +1,1 @@
+export function layoutFor(element: Element) { const r = element.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height, margin: getComputedStyle(element).margin, padding: getComputedStyle(element).padding, border: getComputedStyle(element).border }; }
