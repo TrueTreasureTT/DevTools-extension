@@ -1,0 +1,1 @@
+export function listenersFor(element: Element) { return { note: "Browser JavaScript does not expose every listener through a standard DOM API.", tag: element.tagName.toLowerCase(), id: element.id }; }
