@@ -1,0 +1,1 @@
+export async function openDevTools(tabId?: number) { const id = tabId ?? (await chrome.tabs.query({ active: true, currentWindow: true }))[0]?.id; if (!id) throw new Error("No active tab"); return chrome.windows.create({ url: chrome.runtime.getURL(`ui/devtools.html?tabId=${id}`), type: "popup", width: 1200, height: 800 }); }
