@@ -1,0 +1,1 @@
+export function boxModel(element: Element) { const r = element.getBoundingClientRect(); const s = getComputedStyle(element); return { width: r.width, height: r.height, margin: s.margin, border: s.border, padding: s.padding }; }
