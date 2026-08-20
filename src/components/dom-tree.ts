@@ -1,0 +1,1 @@
+export function buildTree(root: Element): HTMLElement { const ul = document.createElement("ul"); for (const child of [...root.children]) { const li = document.createElement("li"); li.textContent = child.tagName.toLowerCase(); li.appendChild(buildTree(child)); ul.appendChild(li); } return ul; }
