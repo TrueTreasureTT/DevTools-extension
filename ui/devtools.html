@@ -1,2 +1,9 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DevToolsUB</title><link rel="stylesheet" href="devtools.css"></head><body><header><strong>DevToolsUB</strong><nav><button>Elements</button><button>Console</button><button>Sources</button><button>Network</button><button>Performance</button><button>Application</button><button>Security</button></nav></header><main><aside id="tree"><h3>Elements</h3><div id="element-tree"></div></aside><section><div class="tabs"><button>Styles</button><button>Computed</button><button>Layout</button><button>Event Listeners</button></div><div class="tools"><button>:hov</button><button>.cls</button><button>+</button><button>🎨</button></div><pre id="output">Loading page information…</pre></section></main><script type="module" src="../dist/devtools.js"></script></body></html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DevToolsUB</title><link rel="stylesheet" href="devtools.css"></head>
+<body>
+<header><strong>DevToolsUB</strong><nav id="main-tabs">
+<button data-panel="elements">Elements</button><button data-panel="console">Console</button><button data-panel="sources">Sources</button><button data-panel="network">Network</button><button data-panel="performance">Performance</button><button data-panel="application">Application</button><button data-panel="security">Security</button>
+</nav></header>
+<main><aside><h3>Elements</h3><div id="element-tree">Loading…</div></aside><section><div class="tabs" id="sub-tabs"><button data-sub="styles">Styles</button><button data-sub="computed">Computed</button><button data-sub="layout">Layout</button><button data-sub="events">Event Listeners</button></div><div class="tools"><button id="hov">:hov</button><button id="cls">.cls</button><button id="add">+</button><button id="color">🎨</button></div><pre id="output">Loading page information…</pre></section></main>
+<script type="module" src="../dist/devtools.js"></script></body></html>
