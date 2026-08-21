@@ -1,5 +1,4 @@
 import { defineConfig } from "vite";
-import path from "path";
 
 export default defineConfig({
   build: {
@@ -7,10 +6,10 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        background: path.resolve(__dirname, "src/background.ts"),
-        content: path.resolve(__dirname, "src/content.ts"),
-        devtools: path.resolve(__dirname, "src/devtools.ts"),
-        popup: path.resolve(__dirname, "src/popup.ts")
+        background: "src/background.ts",
+        content: "src/content.ts",
+        devtools: "ui/devtools.html",
+        popup: "ui/popup.html"
       },
       output: {
         entryFileNames: "[name].js",
