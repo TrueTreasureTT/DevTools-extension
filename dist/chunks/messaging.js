@@ -1,0 +1,1 @@
+function e(e,t){return new Promise((n,r)=>chrome.runtime.sendMessage({type:e,payload:t},e=>{let t=chrome.runtime.lastError;t?r(Error(t.message)):n(e)}))}function t(e){chrome.runtime.onMessage.addListener((t,n,r)=>(Promise.resolve(e(t,n)).then(r).catch(()=>r(void 0)),!0))}export{e as n,t};

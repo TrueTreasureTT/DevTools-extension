@@ -1,0 +1,1 @@
+import"./chunks/modulepreload-polyfill.js";document.querySelector(`#open`).addEventListener(`click`,async()=>{let e=(await chrome.tabs.query({active:!0,currentWindow:!0}))[0];e?.id&&await chrome.windows.create({url:chrome.runtime.getURL(`ui/devtools.html?tabId=${e.id}`),type:`popup`,width:1200,height:800}),window.close()});
