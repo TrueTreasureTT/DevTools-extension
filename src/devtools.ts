@@ -1,42 +1,20 @@
-import { send } from "./messaging";
-
-type PageData = { title?: string; url?: string; elements?: { tag: string; id: string; className: string; text: string }[]; [key: string]: unknown };
-const tabId = Number(new URLSearchParams(location.search).get("tabId"));
-const output = document.querySelector<HTMLPreElement>("#output");
-const tree = document.querySelector<HTMLElement>("#element-tree");
-let page: PageData = {};
-
-async function refresh() {
-  if (!tabId || !output || !tree) return;
-  try {
-    page = await send<PageData>("page-info", tabId);
-    output.textContent = JSON.stringify(page, null, 2);
-    const elements = page.elements || [];
-    tree.replaceChildren(...elements.map((item, index) => {
-      const node = document.createElement("button");
-      node.className = "tree-node";
-      node.textContent = `${"  ".repeat(Math.min(index, 8))}<${item.tag}${item.id ? `#${item.id}` : ""}${item.className ? `.${item.className.split(/\s+/).filter(Boolean).join(".")}` : ""}>`;
-      node.onclick = () => { output.textContent = JSON.stringify(item, null, 2); };
-      return node;
-    }));
-  } catch (error) { output!.textContent = `Unable to inspect this page: ${String(error)}`; }
-}
-
-document.querySelectorAll<HTMLButtonElement>("#main-tabs button").forEach((button) => button.onclick = () => {
-  const panel = button.dataset.panel || "";
-  output!.textContent = JSON.stringify(panel === "security" ? securityView(page) : page[panel] ?? page, null, 2);
-});
-document.querySelectorAll<HTMLButtonElement>("#sub-tabs button").forEach((button) => button.onclick = () => {
-  const name = button.dataset.sub || "";
-  output!.textContent = JSON.stringify(name === "computed" ? computedView() : name === "layout" ? layoutView() : name === "styles" ? stylesView() : eventsView(), null, 2);
-});
-document.querySelector("#hov")?.addEventListener("click", () => output!.textContent = "Pseudo-state controls are available for authorized pages through the inspector connection.");
-document.querySelector("#cls")?.addEventListener("click", () => output!.textContent = "Class editor ready. Select an inspected element to edit its class list.");
-document.querySelector("#add")?.addEventListener("click", () => output!.textContent = "Add CSS rule: select an element, then add a property/value pair.");
-document.querySelector("#color")?.addEventListener("click", () => output!.textContent = "Color editor ready.");
-function stylesView() { return { stylesheets: page.stylesheets, note: "Stylesheet URLs are shown when exposed by the page." }; }
-function computedView() { return { note: "Computed styles are populated when an element is selected." }; }
-function layoutView() { return { viewport: page.viewport, note: "Select an element for box-model data." }; }
-function eventsView() { return { note: "Event listener inspection requires a selected element and supported browser APIs." }; }
-function securityView(data: PageData) { return { https: (data.security as any)?.https ?? false, mixedContent: (data.security as any)?.mixedContent ?? false, warning: "Potential secrets are reported by pattern only; secret values are never displayed." }; }
+import {send} from "./messaging";
+type Page=any;const tabId=Number(new URLSearchParams(location.search).get("tabId"));let page:Page={};let selected:any=null;const out=document.querySelector<HTMLElement>("#output")!;const tree=document.querySelector<HTMLElement>("#element-tree")!;const status=document.querySelector<HTMLElement>("#status")!;
+async function ask<T=any>(type:string,payload?:any){return send<T>(type,payload);}
+function print(v:any){out.textContent=typeof v==="string"?v:JSON.stringify(v,null,2);}
+function safeText(s:string){return s.replace(/[&<>\"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]!));}
+function renderTree(){tree.replaceChildren();for(const e of page.elements??[]){const b=document.createElement("button");b.className="tree-node";b.textContent=`<${e.tag}${e.id?`#${e.id}`:""}${e.className?`.${e.className.split(/\s+/).filter(Boolean).join(".")}`:""}>`;b.title=e.text||e.tag;b.onclick=async()=>{selected=e;await ask("inspect",{tabId,index:e.index});await showStyles();};tree.append(b);}}
+async function refresh(){if(!tabId){status.textContent="No tab";return;}status.textContent="Inspecting…";try{page=await ask<Page>("page-info",tabId);if(page?.error)throw new Error(page.error);renderTree();status.textContent=page.title||page.url||"Ready";await showStyles();}catch(e){status.textContent="Unavailable";print(`This page cannot be inspected here.\n\n${String(e)}`);}}
+async function showStyles(){if(!selected){print("Select an element to inspect it.");return;}const info=await ask("inspect",{tabId,index:selected.index});print({element:info?.element,styles:info?.element?.style,classes:info?.element?.className});}
+async function panel(name:string){if(name==="elements"){renderTree();await showStyles();return;}if(name==="console"){await ask("console-install",tabId);print(await ask("console-read",tabId));return;}if(name==="sources"){print({html:page.html,stylesheets:page.stylesheets,scripts:page.scripts,links:page.links});return;}if(name==="network"){print(await ask("network",{tabId}));return;}if(name==="security"){const source=String(page.html||"");const patterns=[/api[_-]?key\s*[:=]/i,/secret\s*[:=]/i,/access[_-]?token\s*[:=]/i,/password\s*[:=]/i];const hits=patterns.filter(r=>r.test(source)).map(r=>r.source);const issues=[];if(page.security?.https)issues.push({level:"good",message:"HTTPS is enabled"});else issues.push({level:"warning",message:"Page is not using HTTPS"});if(page.security?.mixedContent)issues.push({level:"bad",message:"Possible mixed-content resource detected"});if(hits.length)issues.push({level:"warning",message:"Possible exposed credential pattern detected; value is intentionally hidden"});print({issues,patterns:patterns.length,htmlBytes:source.length});return;}if(name==="performance"){print({htmlBytes:String(page.html||"").length,elements:page.elements?.length??0,images:page.images?.length??0,scripts:page.scripts?.length??0});return;}if(name==="application"){print({url:page.url,origin:page.origin,readyState:page.readyState,viewport:page.viewport,storage:"Use the Storage API panel for values available to this extension."});}}
+async function sub(name:string){if(!selected){print("Select an element first.");return;}if(name==="styles"){await showStyles();return;}if(name==="computed"){print(await ask("computed",{tabId}));return;}if(name==="layout"){print(await ask("layout",{tabId}));return;}if(name==="events"){print(selected.events??[]);return;}}
+document.querySelectorAll<HTMLButtonElement>("#main-tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#main-tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");void panel(b.dataset.panel||"elements");});
+document.querySelectorAll<HTMLButtonElement>("#sub-tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#sub-tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");void sub(b.dataset.sub||"styles");});
+document.querySelector("#select-element")?.addEventListener("click",()=>print("Select an element in the Elements tree."));
+document.querySelector("#hov")?.addEventListener("click",async()=>{if(!selected)return print("Select an element first.");await ask("hover",{tabId,enabled:true});print("Hover state preview enabled on the selected element.");});
+document.querySelector("#cls")?.addEventListener("click",async()=>{if(!selected)return print("Select an element first.");const name=prompt("Class name to add:");if(name){await ask("add-class",{tabId,name});await showStyles();}});
+document.querySelector("#add")?.addEventListener("click",async()=>{if(!selected)return print("Select an element first.");const property=prompt("CSS property:");const value=property?prompt("CSS value:"):null;if(property&&value){await ask("add-style",{tabId,payload:{property,value}});await showStyles();}});
+document.querySelector("#color")?.addEventListener("click",async()=>{if(!selected)return print("Select an element first.");const value=prompt("Color value:","#1a73e8");if(value){await ask("add-style",{tabId,payload:{property:"color",value}});await showStyles();}});
+document.querySelector("#filter")?.addEventListener("input",e=>{const q=(e.target as HTMLInputElement).value.toLowerCase();for(const n of tree.querySelectorAll<HTMLButtonElement>(".tree-node"))n.hidden=!n.textContent!.toLowerCase().includes(q);});
+document.querySelector("#close")?.addEventListener("click",()=>window.close());
 void refresh();

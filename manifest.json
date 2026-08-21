@@ -1,12 +1,1 @@
-{
-  "manifest_version": 3,
-  "name": "DevToolsUB",
-  "version": "0.2.0",
-  "description": "Custom developer tools for inspecting pages you are authorized to inspect.",
-  "action": { "default_title": "Open DevToolsUB" },
-  "background": { "service_worker": "dist/background.js", "type": "module" },
-  "permissions": ["activeTab", "scripting", "tabs", "storage", "webNavigation"],
-  "host_permissions": ["http://*/*", "https://*/*"],
-  "content_scripts": [{ "matches": ["http://*/*", "https://*/*"], "js": ["dist/content.js"], "run_at": "document_idle" }],
-  "web_accessible_resources": [{ "resources": ["ui/*", "dist/*"], "matches": ["http://*/*", "https://*/*"] }]
-}
+{"manifest_version":3,"name":"DevToolsUB","version":"0.3.0","description":"Custom developer tools for inspecting pages you are authorized to inspect.","action":{"default_title":"Open DevToolsUB"},"background":{"service_worker":"dist/background.js","type":"module"},"permissions":["activeTab","scripting","tabs","storage","webNavigation","webRequest"],"host_permissions":["http://*/*","https://*/*"],"content_scripts":[{"matches":["http://*/*","https://*/*"],"js":["dist/content.js"],"run_at":"document_idle"}],"web_accessible_resources":[{"resources":["ui/*","dist/*"],"matches":["http://*/*","https://*/*"]}]}
