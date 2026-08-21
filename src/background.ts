@@ -26,7 +26,7 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.action.onClicked.addListener(async tab => {
   if (!tab.id) return;
   await chrome.windows.create({
-    url: chrome.runtime.getURL(`dist/devtools.html?tabId=${tab.id}`),
+    url: chrome.runtime.getURL(`dist/ui/devtools.html?tabId=${tab.id}`),
     type: "popup",
     width: 1400,
     height: 900,
