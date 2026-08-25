@@ -2,10 +2,6 @@
 #include <iostream>
 #include <string>
 
-// Minimal Chrome Native Messaging host for DevToolsUB.
-// It does not bypass ChromeOS/admin policy or enable Chrome's built-in DevTools.
-// It provides a local native bridge for the extension's optional switch.
-
 static bool read_message(std::string& message) {
   std::uint32_t length = 0;
   if (!std::cin.read(reinterpret_cast<char*>(&length), sizeof(length))) return false;
