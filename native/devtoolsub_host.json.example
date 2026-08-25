@@ -1,0 +1,9 @@
+{
+  "name": "com.truetreasure.devtoolsub",
+  "description": "DevToolsUB native messaging bridge",
+  "path": "/ABSOLUTE/PATH/TO/devtoolsub_host",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://YOUR_EXTENSION_ID/"
+  ]
+}
