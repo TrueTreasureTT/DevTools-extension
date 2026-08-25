@@ -1,1 +1,41 @@
-<!doctype html><html><head><meta charset="UTF-8"><title>DevToolsUB</title></head><body><button id="open">Open DevTools</button><script type="module">document.querySelector('#open').addEventListener('click', async () => { const tab = (await chrome.tabs.query({active:true,currentWindow:true}))[0]; if (tab?.id) await chrome.windows.create({url: chrome.runtime.getURL(`ui/devtools.html?tabId=${tab.id}`), type:'popup', width:1200, height:800}); window.close(); });</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DevToolsUB</title>
+<style>
+body{font:14px system-ui,-apple-system,sans-serif;margin:0;padding:16px;width:280px;background:#111318;color:#eee}h3{margin:0 0 8px}p{color:#9aa3b2}.row{display:flex;align-items:center;justify-content:space-between;margin:16px 0;padding:10px;border:1px solid #2a2e36;border-radius:8px}.switch{position:relative;width:44px;height:24px}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;inset:0;background:#3a3f49;border-radius:20px;cursor:pointer}.slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}.switch input:checked+.slider{background:#4c8bf5}.switch input:checked+.slider:before{transform:translateX(20px)}button{width:100%;padding:10px;border:0;border-radius:7px;cursor:pointer;background:#4c8bf5;color:white;font-weight:600}#status{font-size:12px;color:#9aa3b2;min-height:18px}
+</style>
+</head>
+<body>
+<h3>DevToolsUB</h3>
+<p>Custom inspection tools with an optional native bridge.</p>
+<div class="row"><span>Allow DevToolsUB</span><label class="switch"><input id="allow" type="checkbox"><span class="slider"></span></label></div>
+<div id="status">Checking native bridge…</div>
+<button id="open">Open DevTools</button>
+<script type="module">
+const allow=document.querySelector('#allow');
+const status=document.querySelector('#status');
+let port;
+try{
+  port=chrome.runtime.connectNative('com.truetreasure.devtoolsub');
+  port.onMessage.addListener(m=>{status.textContent=m?.ok?'Native bridge connected':'Native bridge response received';});
+  port.onDisconnect.addListener(()=>{status.textContent='Native bridge unavailable; extension mode still works.';});
+  status.textContent='Native bridge connected.';
+}catch(e){status.textContent='Native bridge unavailable; extension mode still works.';}
+allow.addEventListener('change',()=>{
+  const enabled=allow.checked;
+  chrome.storage.local.set({devtoolsAllowed:enabled});
+  if(port){try{port.postMessage({action:enabled?'enable':'disable'});}catch{}}
+  status.textContent=enabled?'DevToolsUB enabled.':'DevToolsUB disabled.';
+});
+chrome.storage.local.get({devtoolsAllowed:true}).then(v=>allow.checked=Boolean(v.devtoolsAllowed));
+document.querySelector('#open').addEventListener('click',async()=>{
+  const tab=(await chrome.tabs.query({active:true,currentWindow:true}))[0];
+  if(tab?.id) await chrome.windows.create({url:chrome.runtime.getURL(`ui/devtools.html?tabId=${tab.id}`),type:'popup',width:1200,height:800});
+  window.close();
+});
+</script>
+</body>
+</html>
