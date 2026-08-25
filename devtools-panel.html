@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DevToolsUB Inspector</title>
+  <link rel="stylesheet" href="devtools-panel.css">
+</head>
+<body>
+  <header class="toolbar">
+    <strong>DevToolsUB</strong>
+    <span id="status">Inspector ready</span>
+  </header>
+  <main>
+    <section class="card">
+      <h1>Page Inspector</h1>
+      <p>Inspect the current page with a lightweight extension panel.</p>
+      <div class="grid">
+        <div><span>URL</span><code id="url">—</code></div>
+        <div><span>Title</span><code id="title">—</code></div>
+        <div><span>Elements</span><code id="elements">—</code></div>
+        <div><span>Scripts</span><code id="scripts">—</code></div>
+      </div>
+      <button id="refresh">Refresh inspection</button>
+    </section>
+  </main>
+  <script src="devtools-panel.js"></script>
+</body>
+</html>
