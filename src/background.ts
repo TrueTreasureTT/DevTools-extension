@@ -2,6 +2,7 @@ import { onMessage } from "./messaging";
 
 type NetEntry = { url: string; method: string; status: number; type: string; time: number; error?: string };
 const network = new Map<number, NetEntry[]>();
+const CONTEXT_MENU_ID = "inspect-with-devtoolsub";
 
 function addNetwork(tabId: number, entry: NetEntry) {
   const entries = network.get(tabId) ?? [];
@@ -21,6 +22,32 @@ chrome.webRequest.onErrorOccurred.addListener(
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.set({ installed: true, version: chrome.runtime.getManifest().version });
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: CONTEXT_MENU_ID,
+      title: "Inspect with DevToolsUB",
+      contexts: ["all"]
+    });
+  });
+});
+
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  if (info.menuItemId !== CONTEXT_MENU_ID || !tab?.id) return;
+
+  // The content script remembers the element that received the context-menu event.
+  const selected = await page(tab.id, { type: "context-select" });
+  await chrome.storage.local.set({
+    contextSelection: selected,
+    contextTabId: tab.id
+  });
+
+  await chrome.windows.create({
+    url: chrome.runtime.getURL(`dist/ui/devtools.html?tabId=${tab.id}`),
+    type: "popup",
+    width: 1400,
+    height: 900,
+    focused: true
+  });
 });
 
 chrome.action.onClicked.addListener(async tab => {
@@ -60,14 +87,7 @@ async function hookConsole(tabId: number) {
         for (const level of ["log", "info", "warn", "error", "debug"]) {
           const original = (console as any)[level];
           (console as any)[level] = (...args: any[]) => {
-            w.__DEVTOOLSUB_CONSOLE.push({
-              level,
-              args: args.map(x => {
-                try { return typeof x === "string" ? x : JSON.parse(JSON.stringify(x)); }
-                catch { return String(x); }
-              }),
-              time: Date.now()
-            });
+            w.__DEVTOOLSUB_CONSOLE.push({ level, args: args.map(x => { try { return typeof x === "string" ? x : JSON.parse(JSON.stringify(x)); } catch { return String(x); } }), time: Date.now() });
             if (w.__DEVTOOLSUB_CONSOLE.length > 300) w.__DEVTOOLSUB_CONSOLE.shift();
             original.apply(console, args);
           };
@@ -75,28 +95,21 @@ async function hookConsole(tabId: number) {
       }
     });
     return true;
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 }
 
 async function readConsole(tabId: number) {
   try {
-    const result = await chrome.scripting.executeScript({
-      target: { tabId },
-      world: "MAIN",
-      func: () => (window as any).__DEVTOOLSUB_CONSOLE ?? []
-    });
+    const result = await chrome.scripting.executeScript({ target: { tabId }, world: "MAIN", func: () => (window as any).__DEVTOOLSUB_CONSOLE ?? [] });
     return result[0]?.result ?? [];
-  } catch (error) {
-    return [{ level: "error", args: [String(error)] }];
-  }
+  } catch (error) { return [{ level: "error", args: [String(error)] }]; }
 }
 
 onMessage(async message => {
   if (message.type === "active-tab") return (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
   if (message.type === "page-info") return page(Number(message.payload), { type: "collect" });
   if (message.type === "inspect") return page(Number(message.tabId), { type: "select", payload: Number(message.index) });
+  if (message.type === "context-selection") return (await chrome.storage.local.get("contextSelection")).contextSelection ?? null;
   if (message.type === "computed") return page(Number(message.tabId), { type: "computed" });
   if (message.type === "layout") return page(Number(message.tabId), { type: "layout" });
   if (message.type === "hover") return page(Number(message.tabId), { type: "hover", payload: Boolean(message.enabled) });

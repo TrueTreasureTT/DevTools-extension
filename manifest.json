@@ -11,7 +11,7 @@
     "service_worker": "dist/background.js",
     "type": "module"
   },
-  "permissions": ["activeTab", "scripting", "tabs", "storage", "webNavigation", "webRequest", "nativeMessaging"],
+  "permissions": ["activeTab", "scripting", "tabs", "storage", "webNavigation", "webRequest", "nativeMessaging", "contextMenus"],
   "host_permissions": ["http://*/*", "https://*/*"],
   "content_scripts": [{"matches": ["http://*/*", "https://*/*"], "js": ["dist/content.js"], "run_at": "document_idle"}],
   "web_accessible_resources": [{"resources": ["dist/*"], "matches": ["http://*/*", "https://*/*"]}]
